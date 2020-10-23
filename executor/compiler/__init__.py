@@ -1,4 +1,3 @@
-
 class Compiler:
     def __init__(self):
         print("Init compiler")

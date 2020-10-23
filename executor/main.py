@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask_cors import CORS
+from flask_socketio import SocketIO
 from subprocess import Popen, PIPE
 import os
 
@@ -44,5 +45,8 @@ def compile_route():
         return str({"error": str(e)})
 
 
+socketio = SocketIO(app)
+
 PORT = 5700
-app.run(port=PORT, host="0.0.0.0", debug=True)
+if __name__ == "__main__":
+    socketio.run(app, port=PORT, host="0.0.0.0")
