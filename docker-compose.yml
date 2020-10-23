@@ -1,0 +1,20 @@
+version: "3.3"
+services:
+  executor:
+    build:
+      context: ./executor
+    volumes:
+      - ./executor:/app
+    ports:
+      - "5700:5700"
+  client:
+    build:
+      context: ./tryout-client
+    stdin_open: true
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_BUILD=development
+    volumes:
+      - "./tryout-client:/usr/src/app"
