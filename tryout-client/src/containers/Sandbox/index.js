@@ -1,6 +1,8 @@
 import React from "react";
 import MonacoEditor from "react-monaco-editor";
 
+import socketIOClient from "socket.io-client";
+
 import { Row, Col, Layout, Modal, Button } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 
@@ -13,9 +15,11 @@ const superagent = require("superagent");
 
 const { Content } = Layout;
 
+const socketIoServerEndpoint = "http://127.0.0.1:5700";
+
 class Sandbox extends React.Component {
   constructor(props) {
-    super(props);
+    super();
 
     this.state = {
       loading: false,
@@ -32,6 +36,51 @@ class Sandbox extends React.Component {
         clearEditor: false,
       },
     };
+  }
+
+  // catch browser tab close event
+  setupBeforeUnloadListener = () => {
+    window.addEventListener(
+      "beforeunload",
+      function (ev) {
+        ev.preventDefault();
+        return this.killSocketConnection();
+      }.bind(this)
+    );
+  };
+
+  setupSocketConnection() {
+    const socket = socketIOClient(socketIoServerEndpoint);
+    socket.on("connect", function () {
+      console.log("Connected to backend server");
+    });
+    socket.on("disconnect", function () {
+      console.log("Disconnecting from backend server");
+    });
+    socket.emit("join_room", {
+      room_id: "1234",
+      user_id: "matanbroner",
+    });
+    this.setState({
+      socket,
+    });
+  }
+
+  killSocketConnection() {
+    this.state.socket.emit("exit_room", {
+      room_id: "1234",
+      user_id: "matanbroner",
+    });
+    this.state.socket.disconnect();
+  }
+
+  componentDidMount() {
+    this.setupBeforeUnloadListener();
+    this.setupSocketConnection();
+  }
+
+  componentWillUnmount() {
+    this.killSocketConnection();
   }
 
   onCodeChange(code) {
@@ -61,6 +110,10 @@ class Sandbox extends React.Component {
       loading: true,
     });
     try {
+      this.state.socket.emit("compile", {
+        code: this.state.editor.rawContent,
+        lang: "python",
+      });
       const res = await superagent.post("http://0.0.0.0:5700/compile").send({
         code: this.state.editor.rawContent,
         language: "python",
@@ -81,6 +134,7 @@ class Sandbox extends React.Component {
   renderEditor() {
     return (
       <MonacoEditor
+        height="100vh"
         language={this.state.editor.language}
         theme={this.state.editor.theme}
         value={this.state.editor.rawContent}
@@ -110,15 +164,15 @@ class Sandbox extends React.Component {
   render() {
     return (
       <Layout id={styles.wrapper}>
-        <Content>
+        <Content id={styles.content}>
           <SandboxHeader
             loading={this.state.loading}
             compile={this.compile.bind(this)}
             clear={this.renderClearModal.bind(this)}
           />
-          <Layout style={{ height: "100%" }}>
+          <Layout style={{height: "100%"}}>
             {/* <SandboxSidebar /> */}
-            <Content>
+            <Content style={{height: "100%"}}>
               <Row id={styles.editorWrapper}>
                 <Col span={16}>{this.renderEditor()}</Col>
                 <Col span={8}>
