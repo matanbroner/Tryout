@@ -1,5 +1,5 @@
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room
-
+from compiler import Compiler
 dev_room_table = {}
 
 
@@ -7,12 +7,21 @@ class SocketHandler:
     def __init__(self, app):
         self.app = app
         self.socketio = SocketIO(app, cors_allowed_origins="*")
+        self.compiler = Compiler()
 
         self.define_room_events()
         self.define_compiler_events()
 
     def run(self, port, host):
         self.socketio.run(self.app, port=port, host=host)
+
+    def create_compile_callback(room_id: str):
+        def callback(output, errors):
+            self.socketio.emit('compile_complete', {
+                "output": output,
+                "errors": errors
+            }, room=room_id)
+        return callback
 
     def define_room_events(self):
         @self.socketio.on("join_room")
@@ -55,5 +64,9 @@ class SocketHandler:
         def on_compile(config):
             code = config.get('code')
             lang = config.get('lang')
-            if code and lang:
-                print("{} {}".format(code, lang))
+            room_id = config.get('room_id')
+            if code and lang and room_id:
+                callback = self.create_compile_callback(room_id)
+                self.compiler.run_code(code, language, callback)
+                
+                
