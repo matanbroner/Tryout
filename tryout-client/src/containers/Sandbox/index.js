@@ -30,7 +30,7 @@ class Sandbox extends React.Component {
       },
       output: {
         stdout: "",
-        stderror: "",
+        stderr: "",
       },
       modals: {
         clearEditor: false,
@@ -57,6 +57,16 @@ class Sandbox extends React.Component {
     socket.on("disconnect", function () {
       console.log("Disconnecting from backend server");
     });
+    socket.on("compile_complete", function(data) {
+      console.log(data)
+      this.setState({
+        loading: false,
+        output: {
+          stdout: data.stdout,
+          stderr: data.stderr
+        }
+      })
+    }.bind(this))
     socket.emit("join_room", {
       room_id: "1234",
       user_id: "matanbroner",
@@ -100,7 +110,7 @@ class Sandbox extends React.Component {
       },
       output: {
         stdout: "",
-        stderror: "",
+        stderr: "",
       },
     });
   }
@@ -112,19 +122,8 @@ class Sandbox extends React.Component {
     try {
       this.state.socket.emit("compile", {
         code: this.state.editor.rawContent,
-        lang: "python",
-      });
-      const res = await superagent.post("http://0.0.0.0:5700/compile").send({
-        code: this.state.editor.rawContent,
         language: "python",
-      });
-      console.log(res.body);
-      this.setState({
-        loading: false,
-        output: {
-          stdout: res.body.stdout,
-          stderror: res.body.stderror,
-        },
+        room_id: "1234"
       });
     } catch (err) {
       alert(err);
@@ -178,7 +177,7 @@ class Sandbox extends React.Component {
                 <Col span={8}>
                   <SandboxOutput
                     stdout={this.state.output.stdout}
-                    stderror={this.state.output.stderror}
+                    stderr={this.state.output.stderr}
                   />
                 </Col>
               </Row>

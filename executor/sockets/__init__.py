@@ -15,11 +15,11 @@ class SocketHandler:
     def run(self, port, host):
         self.socketio.run(self.app, port=port, host=host)
 
-    def create_compile_callback(room_id: str):
+    def create_compile_callback(self, room_id: str):
         def callback(output, errors):
             self.socketio.emit('compile_complete', {
-                "output": output,
-                "errors": errors
+                "stdout": output,
+                "stderr": errors
             }, room=room_id)
         return callback
 
@@ -63,10 +63,15 @@ class SocketHandler:
         @self.socketio.on('compile')
         def on_compile(config):
             code = config.get('code')
-            lang = config.get('lang')
+            language = config.get('language')
             room_id = config.get('room_id')
-            if code and lang and room_id:
-                callback = self.create_compile_callback(room_id)
+            callback = self.create_compile_callback(room_id)
+            try:
+                if not code or not len(code) or not language:
+                    raise(RuntimeError("Missing one or more of arguments [code, language]"))
                 self.compiler.run_code(code, language, callback)
+            except Exception:
+                callback(None, None)
+                
                 
                 

@@ -1,4 +1,5 @@
 from .core_objects import CompilerExecution
+from .utils import current_dir
 from uuid import uuid4
 import os
 
@@ -17,13 +18,17 @@ class Compiler:
 
     
     def generate_build_file(self, code: str, language: str):
-        file_id = str(uuid4())
+        file_id = str(uuid4())[:8] # UUID most be short due to file length limits
         suffix = self.file_suffix(language)
         file_name = f"{file_id}.{suffix}"
-        file_path = os.path.join('./builds', file_name)
-        with open(file_path, "w+") as fs:
+        file_path = os.path.join(current_dir(), 'builds', file_name)
+        try:
+            fs = open(file_path, "w+")
             fs.write(code)
-        return str(file_path)
+            fs.close()
+            return str(file_path)
+        except Exception as e:
+            print(str(e))
     
     def file_suffix(self, language: str):
         if language == "python":

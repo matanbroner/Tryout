@@ -9,7 +9,7 @@ const SandboxOutput = (props) => {
         <br />
         <span>{props.stdout}</span>
         <br />
-        <span id={styles.stderror}>{props.stderror}</span>
+        <span id={styles.stderr}>{props.stderr}</span>
       </div>
     </div>
   );
