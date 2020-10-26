@@ -1,13 +1,15 @@
 version: "3.3"
 services:
   executor:
+    container_name: "executor"
     build:
-      context: ./executor
+      context: ./executor_new
     volumes:
-      - ./executor:/app
+      - ./executor_new:/app
     ports:
       - "5700:5700"
   client:
+    container_name: "client"
     build:
       context: ./tryout-client
     stdin_open: true

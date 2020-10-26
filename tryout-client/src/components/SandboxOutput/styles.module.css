@@ -1,10 +1,12 @@
 #wrapper {
   height: 100%;
+  width: 100%;
   background-color: #1e1e1e;
   padding: 15px;
 }
 
 #textArea {
+  width: 100%;
   white-space: pre;
   color: #d4d4d4;
   font-family: Menlo, Monaco, "Courier New", monospace;
@@ -17,4 +19,6 @@
 
 #stderr {
   color: #ff0033;
+  overflow-wrap: break-word;
+  white-space: initial;
 }

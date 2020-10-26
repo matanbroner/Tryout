@@ -25,7 +25,7 @@ class Sandbox extends React.Component {
       loading: false,
       editor: {
         rawContent: "",
-        language: "python",
+        language: "java",
         theme: "vs-dark",
       },
       output: {
@@ -58,6 +58,7 @@ class Sandbox extends React.Component {
       console.log("Disconnecting from backend server");
     });
     socket.on("compile_complete", function(data) {
+      console.log("Got compile complete")
       console.log(data)
       this.setState({
         loading: false,
@@ -68,8 +69,8 @@ class Sandbox extends React.Component {
       })
     }.bind(this))
     socket.emit("join_room", {
-      room_id: "1234",
-      user_id: "matanbroner",
+      roomId: "1234",
+      userId: "matanbroner",
     });
     this.setState({
       socket,
@@ -78,8 +79,8 @@ class Sandbox extends React.Component {
 
   killSocketConnection() {
     this.state.socket.emit("exit_room", {
-      room_id: "1234",
-      user_id: "matanbroner",
+      roomId: "1234",
+      userId: "matanbroner",
     });
     this.state.socket.disconnect();
   }
@@ -102,6 +103,15 @@ class Sandbox extends React.Component {
     });
   }
 
+  onLanguageChange(language){
+    this.setState({
+      editor: {
+        ...this.state.editor,
+        language,
+      },
+    })
+  }
+
   clearEditor() {
     this.setState({
       editor: {
@@ -120,10 +130,10 @@ class Sandbox extends React.Component {
       loading: true,
     });
     try {
-      this.state.socket.emit("compile", {
+      this.state.socket.emit("compile_init", {
         code: this.state.editor.rawContent,
-        language: "python",
-        room_id: "1234"
+        language: this.state.editor.language,
+        roomId: "1234"
       });
     } catch (err) {
       alert(err);
@@ -168,6 +178,8 @@ class Sandbox extends React.Component {
             loading={this.state.loading}
             compile={this.compile.bind(this)}
             clear={this.renderClearModal.bind(this)}
+            language={this.state.editor.language}
+            onLanguageChange={(language) => this.onLanguageChange(language)}
           />
           <Layout style={{height: "100%"}}>
             {/* <SandboxSidebar /> */}

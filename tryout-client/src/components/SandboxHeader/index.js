@@ -12,6 +12,14 @@ import {
 import styles from "./styles.module.css";
 
 const SandboxHeader = (props) => {
+
+  const formatLanguageName = () => {
+    return props.language.replace("_", " ")
+    .toLowerCase()
+    .split(' ')
+    .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+    .join(' ');
+  }
   const renderButtonGroup = () => {
     return [
       {
@@ -44,10 +52,12 @@ const SandboxHeader = (props) => {
   };
   const renderLanguagesDropdown = () => {
     return (
-      <Menu>
-        <Menu.Item key="1">Javascript</Menu.Item>
-        <Menu.Item key="2">Python</Menu.Item>
-        <Menu.Item key="3">Visual Basic</Menu.Item>
+      <Menu onClick={(item) => {
+        props.onLanguageChange(item.key);
+      }}>
+        <Menu.Item key="javascript">Javascript</Menu.Item>
+        <Menu.Item key="python">Python</Menu.Item>
+        <Menu.Item key="java">Java</Menu.Item>
       </Menu>
     );
   };
@@ -68,7 +78,9 @@ const SandboxHeader = (props) => {
               float: "right",
             }}
           >
-            Language <DownOutlined />
+            {
+              formatLanguageName()
+            } <DownOutlined />
           </Button>
         </Dropdown>
         {renderButtonGroup()}
