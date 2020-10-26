@@ -7,18 +7,24 @@ const util = require("./util");
 class Compiler {
   async runCode(code, language, callback, settings = {}) {
     const filePath = await this.generateBuildFile(code, language);
-    const modCallback = this.generateExecutionCallback(filePath, callback);
+    const modCallback = this.generateExecutionCallback(
+      filePath,
+      language,
+      callback
+    );
     return new CompilerExecution(filePath, language, modCallback, settings);
   }
 
   async generateBuildFile(code, language) {
-    const fileId = util.all.uuid();
+    let fileId = util.all.uuid();
+    const modifiedBuild = this.formatPreBuild(language, code, fileId);
+    code = modifiedBuild.code;
+    fileId = modifiedBuild.fileId;
     const suffix = this.fileSuffix(language);
     const filePath = await path.resolve(
       __dirname,
       `builds/${fileId}.${suffix}`
     );
-    code = this.formatPreBuild(language, code, fileId);
     const err = await fs.writeFile(filePath, code);
     if (err) {
       console.log(err);
@@ -26,9 +32,9 @@ class Compiler {
     return filePath;
   }
 
-  generateExecutionCallback(filePath, callback) {
+  generateExecutionCallback(filePath, language, callback) {
     const execCallback = (output, errors) => {
-      fs.unlink(filePath);
+      // fs.unlink(filePath);
       callback(output, errors);
     };
     return execCallback;
@@ -37,9 +43,21 @@ class Compiler {
   formatPreBuild(language, code, fileId) {
     switch (language) {
       case "java":
-        return util.java.mainClassRefactor(code, fileId);
+        return util.java.formatPreBuild(code, fileId);
       default:
-        return code;
+        return {
+          code,
+          fileId,
+        };
+    }
+  }
+
+  cleanPostBuild(language) {
+    switch (language) {
+      case "java":
+        return util.java.cleanPostBuild;
+      default:
+        return null;
     }
   }
 

@@ -9,6 +9,7 @@ import { ExclamationCircleOutlined } from "@ant-design/icons";
 import SandboxSidebar from "../../components/SandboxSidebar";
 import SandboxHeader from "../../components/SandboxHeader";
 import SandboxOutput from "../../components/SandboxOutput";
+import starterCode from "../../assets/starterCode";
 import styles from "./styles.module.css";
 
 const superagent = require("superagent");
@@ -20,12 +21,12 @@ const socketIoServerEndpoint = "http://127.0.0.1:5700";
 class Sandbox extends React.Component {
   constructor(props) {
     super();
-
+    this.initialLanguage = "java";
     this.state = {
       loading: false,
       editor: {
-        rawContent: "",
-        language: "java",
+        rawContent: starterCode[this.initialLanguage],
+        language: this.initialLanguage,
         theme: "vs-dark",
       },
       output: {
@@ -57,17 +58,20 @@ class Sandbox extends React.Component {
     socket.on("disconnect", function () {
       console.log("Disconnecting from backend server");
     });
-    socket.on("compile_complete", function(data) {
-      console.log("Got compile complete")
-      console.log(data)
-      this.setState({
-        loading: false,
-        output: {
-          stdout: data.stdout,
-          stderr: data.stderr
-        }
-      })
-    }.bind(this))
+    socket.on(
+      "compile_complete",
+      function (data) {
+        console.log("Got compile complete");
+        console.log(data);
+        this.setState({
+          loading: false,
+          output: {
+            stdout: data.stdout,
+            stderr: data.stderr,
+          },
+        });
+      }.bind(this)
+    );
     socket.emit("join_room", {
       roomId: "1234",
       userId: "matanbroner",
@@ -103,13 +107,14 @@ class Sandbox extends React.Component {
     });
   }
 
-  onLanguageChange(language){
+  onLanguageChange(language) {
     this.setState({
       editor: {
         ...this.state.editor,
+        rawContent: starterCode[language] || "",
         language,
       },
-    })
+    });
   }
 
   clearEditor() {
@@ -133,7 +138,7 @@ class Sandbox extends React.Component {
       this.state.socket.emit("compile_init", {
         code: this.state.editor.rawContent,
         language: this.state.editor.language,
-        roomId: "1234"
+        roomId: "1234",
       });
     } catch (err) {
       alert(err);
@@ -181,9 +186,9 @@ class Sandbox extends React.Component {
             language={this.state.editor.language}
             onLanguageChange={(language) => this.onLanguageChange(language)}
           />
-          <Layout style={{height: "100%"}}>
+          <Layout style={{ height: "100%" }}>
             {/* <SandboxSidebar /> */}
-            <Content style={{height: "100%"}}>
+            <Content style={{ height: "100%" }}>
               <Row id={styles.editorWrapper}>
                 <Col span={16}>{this.renderEditor()}</Col>
                 <Col span={8}>

@@ -1,4 +1,6 @@
 const uuidv4 = require("uuid").v4;
+const fs = require("fs");
+const path = require("path");
 
 module.exports = {
   all: {
@@ -10,27 +12,16 @@ module.exports = {
     },
   },
   java: {
-    mainClassRefactor: (code, fileId) => {
-      let mainClass = "";
-      let mainIndex = -1;
-      words = code.split(" ").filter((word) => {
-          return word !== "{" && word !== "}" && word.trim().length !== 0;
-      })
-      for (let i = 0; i < words.length; i++) {
-        if (words[i].includes("main(")) {
-          mainIndex = i;
-        }
+    formatPreBuild: (code, fileId) => {
+      return {
+        code: code.replace("Solution", `Solution${fileId}`),
+        fileId: `Solution${fileId}`,
+      };
+    },
+    cleanPostBuild: (stdout, stderr, fileId) => {
+      if (stderr.length == 0) {
+        fs.unlink(path.resolve(__dirname, "builds", `${fileId}.class`));
       }
-      console.log(mainIndex);
-      for (let j = mainIndex; j >= 0; j--) {
-        console.log(words[j]);
-        if (words[j] === "class") {
-          mainClass = words[j + 1];
-          console.log("Main class: " + mainClass);
-          break;
-        }
-      }
-      return code.replace(mainClass, fileId);
     },
   },
 };

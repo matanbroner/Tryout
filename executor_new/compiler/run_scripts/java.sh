@@ -7,4 +7,3 @@ javac $filename
 output="$(java ${filename%.*})"
 
 echo "$output"
-rm "${filename%.*}.class"
