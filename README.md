@@ -12,7 +12,7 @@ A real-time collaborative code editor and compiler
 ## Install
 
 ```sh
-docker-compose up build
+docker-compose build
 ```
 
 ## Usage
