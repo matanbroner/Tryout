@@ -5,18 +5,20 @@
 
 A real-time collaborative code editor and compiler
 
+![Alt Text](./assets/demo.gif)
+
 ### 🏠 [Homepage](https://github.com/matanbroner/Tryout#readme)
 
 ## Install
 
 ```sh
-npm install
+docker-compose up build
 ```
 
 ## Usage
 
 ```sh
-npm run start
+docker-compose up
 ```
 
 ## Author
