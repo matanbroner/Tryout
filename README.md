@@ -1,9 +1,6 @@
 <h1 align="center">Tryout </h1>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000" />
-  <a href="https://github.com/matanbroner/Tryout/blob/master/LICENSE" target="_blank">
-    <img alt="License: MIT" src="https://img.shields.io/github/license/matanbroner/Tryout" />
-  </a>
 </p>
 
 A real-time collaborative code editor and compiler
