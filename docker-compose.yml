@@ -3,9 +3,9 @@ services:
   executor:
     container_name: "executor"
     build:
-      context: ./executor_new
+      context: ./executor
     volumes:
-      - ./executor_new:/app
+      - ./executor:/app
     ports:
       - "5700:5700"
   client:
