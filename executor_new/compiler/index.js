@@ -6,10 +6,14 @@ const util = require("./util");
 
 class Compiler {
   async runCode(code, language, callback, settings = {}) {
-    const filePath = await this.generateBuildFile(code, language);
+    const {
+      fileId,
+      filePath
+    } = await this.generateBuildFile(code, language);
     const modCallback = this.generateExecutionCallback(
       filePath,
       language,
+      fileId,
       callback
     );
     return new CompilerExecution(filePath, language, modCallback, settings);
@@ -29,14 +33,18 @@ class Compiler {
     if (err) {
       console.log(err);
     }
-    return filePath;
+    return {
+      fileId,
+      filePath
+    };
   }
 
-  generateExecutionCallback(filePath, language, callback) {
-    const execCallback = (output, errors) => {
-      // fs.unlink(filePath);
+  generateExecutionCallback(filePath, language, fileId, callback) {
+    const execCallback = function(output, errors){
+      fs.unlink(filePath);
+      this.cleanPostBuild(language)(output, errors, fileId);
       callback(output, errors);
-    };
+    }.bind(this);
     return execCallback;
   }
 
@@ -57,7 +65,7 @@ class Compiler {
       case "java":
         return util.java.cleanPostBuild;
       default:
-        return null;
+        return function() { return };
     }
   }
 

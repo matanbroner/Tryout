@@ -20,7 +20,10 @@ module.exports = {
     },
     cleanPostBuild: (stdout, stderr, fileId) => {
       if (stderr.length == 0) {
-        fs.unlink(path.resolve(__dirname, "builds", `${fileId}.class`));
+        fs.unlink(path.resolve(__dirname, "builds", `${fileId}.class`), (err) => {
+          console.log(err);
+          return;
+        });
       }
     },
   },

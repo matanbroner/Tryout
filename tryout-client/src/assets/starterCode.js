@@ -1,6 +1,6 @@
 export default {
   java: `
-    import java.util.*
+    import java.util.*;
     
     class Solution {
         public static void main(String[ ] args) {
