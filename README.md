@@ -28,7 +28,7 @@ npm run start
 
 ## 🤝 Contributing
 
-Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/matanbroner/Tryout/issues). You can also take a look at the [contributing guide](https://github.com/matanbroner/Tryout/blob/master/CONTRIBUTING.md).
+Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/matanbroner/Tryout/issues).
 
 ## 📝 License
 
