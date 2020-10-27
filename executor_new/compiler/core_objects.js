@@ -11,6 +11,12 @@ class CompilerExecution {
     this.generateProcess(filePath, language, callback);
   }
 
+  /**
+   * Creates new shell process to run the given build file
+   * @param  {String} filePath
+   * @param  {String} language
+   * @param  {Function} callback
+   */
   async generateProcess(filePath, language, callback) {
     const cmd = await path.resolve(__dirname, `run_scripts/${language}.sh`);
     cp.execFile(

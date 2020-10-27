@@ -11,15 +11,24 @@ class SocketHandler {
     this.setupTransport();
   }
 
+  /**
+   * Starts listening on given HTTP server
+   * @param  {Number} port
+   */
   listen(port) {
     this.server.listen(port, () => {
       console.log(`Server listening on port ${port}`);
     });
   }
 
+  /**
+   * Generates callback to be called after compiler execution
+   * @param  {String} roomId
+   * @returns {Function} callback accepting output and errors
+   */
   generateCompileCallback(roomId) {
     const callback = (output, errors) => {
-      console.log(`Emitting roomId: [${roomId}] compile_complete`)
+      console.log(`Emitting roomId: [${roomId}] compile_complete`);
       this.io.to(roomId).emit(constants.COMPILE_COMPLETE, {
         stdout: output,
         stderr: errors,
@@ -28,19 +37,26 @@ class SocketHandler {
     return callback;
   }
 
+  /**
+   * Initiates Socket.IO server connection
+   */
   setupTransport() {
     this.io = socketio(this.server);
     this.io.origins("*:*");
     this.io.on(
       constants.CONNECTION,
       function (socket) {
-        console.log(`Socket connected: ${socket.id}`)
+        console.log(`Socket connected: ${socket.id}`);
         this.defineRoomEvents(socket);
         this.defineCompilerEvents(socket);
       }.bind(this)
     );
   }
 
+  /**
+   * Defines events associated with Socket.IO rooms
+   * @param  {socketio.socket} socket
+   */
   defineRoomEvents(socket) {
     socket.on(
       constants.JOIN_ROOM,
@@ -69,6 +85,10 @@ class SocketHandler {
     );
   }
 
+  /**
+   * Defines events associated with compilation
+   * @param  {socketio.socket} socket
+   */
   defineCompilerEvents(socket) {
     socket.on(
       constants.COMPILE_INIT,
