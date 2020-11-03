@@ -94,6 +94,8 @@ class Compiler {
     switch (language) {
       case "java":
         return util.java.cleanPostBuild;
+      case "c":
+        return util.c.cleanPostBuild;
       default:
         return function () {
           return;
@@ -114,6 +116,8 @@ class Compiler {
         return "js";
       case "java":
         return "java";
+      case "c":
+        return "c";
     }
   }
 }

@@ -28,10 +28,14 @@ RUN apt-get update
 RUN apt-get install -y openjdk-11-jre-headless
 RUN apt-get clean
 
+# Install C
+# RUN apt-get install -y build-essential --no-cache
+
 # Install container dependencies and run
 COPY ./package.json ./
-RUN npm install --no-cache
+RUN npm install
+RUN npm install -g nodemon
 COPY . .
 RUN ls /home/app
 EXPOSE 5700
-CMD ["node", "index.js"]
+CMD ["nodemon", "-L", "index.js"]

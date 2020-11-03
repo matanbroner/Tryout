@@ -1,11 +1,32 @@
 version: "3.3"
 services:
+  socket-proxy:
+    user: root
+    image: tecnativa/docker-socket-proxy
+    container_name: socket-proxy
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 2375
+    environment:
+      - POST=1
+      - CONTAINERS=1
+      - IMAGES=1
+      - VOLUMES=1
+      - BUILD=1
+      - SERVICES=1
+      - TASKS=1
+      - NETWORKS=1
+      - NODES=1
+      - EXEC=1
   executor:
     container_name: "executor"
     build:
       context: ./executor
     volumes:
-      - ./executor:/app
+      - ./executor:/home/app
+      - /usr/src/app/node_modules
     ports:
       - "5700:5700"
   client:
@@ -19,4 +40,5 @@ services:
       - NODE_ENV=development
       - REACT_APP_BUILD=development
     volumes:
-      - "./tryout-client:/usr/src/app"
+      - ./tryout-client:/usr/src/app
+      - /usr/src/app/node_modules
