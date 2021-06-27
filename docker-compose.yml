@@ -26,7 +26,7 @@ services:
       context: ./executor
     volumes:
       - ./executor:/home/app
-      - /usr/src/app/node_modules
+      - /home/app/node_modules
     ports:
       - "5700:5700"
   client:
@@ -40,5 +40,5 @@ services:
       - NODE_ENV=development
       - REACT_APP_BUILD=development
     volumes:
-      - ./tryout-client:/usr/src/app
-      - /usr/src/app/node_modules
+      - ./tryout-client:/app
+      - /app/node_modules

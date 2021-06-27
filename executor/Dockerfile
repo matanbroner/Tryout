@@ -33,7 +33,7 @@ RUN apt-get clean
 
 # Install container dependencies and run
 COPY ./package.json ./
-RUN npm install
+RUN npm install --verbose
 RUN npm install -g nodemon
 COPY . .
 RUN ls /home/app

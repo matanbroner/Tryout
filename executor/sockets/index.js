@@ -93,13 +93,13 @@ class SocketHandler {
     socket.on(
       constants.COMPILE_INIT,
       function (data) {
-        const { code, language, roomId } = data;
+        const { files, language, roomId } = data;
         const callback = this.generateCompileCallback(roomId);
         try {
-          if (!code || !language) {
-            throw "Missing one or more of arguments [code, language]";
+          if (!files || !language) {
+            throw "Missing one or more of arguments [files, language]";
           }
-          this.compiler.runCode(code, language, callback);
+          this.compiler.runCode(files, language, callback);
         } catch (e) {
           callback(null, e);
         }

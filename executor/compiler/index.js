@@ -1,68 +1,78 @@
 const fs = require("fs").promises;
 const path = require("path");
 const util = require("./util");
-const { CompilerExecution } = require("./core_objects");
+const { ContainerManager } = require("../container_manager");
 
 class Compiler {
+  constructor() {
+    this.containerManager = new ContainerManager({});
+  }
   /**
    * Initiates build and execution of given code
-   * @param  {String} code
+   * @param  {Array} files
    * @param  {String} language
    * @param  {Function} callback - function accepting stdout and stderr
    * @param  {Object} settings
-   * @returns {CompilerExecution} - timed execution of the given code
    */
-  async runCode(code, language, callback, settings = {}) {
-    const { fileId, filePath } = await this.generateBuildFile(code, language);
-    const modCallback = this.generateExecutionCallback(
-      filePath,
-      language,
-      fileId,
+  async runCode(files, language, callback, settings = {}) {
+    const { buildPath, compileId } = await this.generateBuildDir(
+      files,
+      language
+    );
+    const wrappedCallback = this.generateExecutionCallback(
+      buildPath,
+      compileId,
       callback
     );
-    return new CompilerExecution(filePath, language, modCallback, settings);
+    this.containerManager.run(language, buildPath, wrappedCallback);
   }
 
   /**
-   * Generates a language dependent file with inputed code
-   * @param  {String} code
-   * @param  {String} language
-   * @returns {Object} ID and path of generated code file
+   * Generates a build directory for a compilation
+   * @param   {Array} files - object holding each file's contents and name
+   * @param   {String} language
+   * @returns {Object} compilation ID and path of build
    */
-  async generateBuildFile(code, language) {
-    let fileId = util.all.uuid();
-    const modifiedBuild = this.formatPreBuild(language, code, fileId);
-    code = modifiedBuild.code;
-    fileId = modifiedBuild.fileId;
-    const suffix = this.fileSuffix(language);
-    const filePath = await path.resolve(
-      __dirname,
-      `builds/${fileId}.${suffix}`
-    );
-    const err = await fs.writeFile(filePath, code);
-    if (err) {
-      console.log(err);
+  async generateBuildDir(files, language) {
+    let compileId = util.all.uuid();
+    const buildPath = path.join(__dirname, `builds/${compileId}`);
+    try {
+      await fs.mkdir(buildPath);
+      let fileWritePromises = files.map((file) => {
+        return fs.writeFile(
+          path.join(buildPath, file.name),
+          file.content,
+          "utf-8"
+        );
+      });
+      fileWritePromises.push(
+        fs.copyFile(
+          path.join(__dirname, `run_scripts/${language}.sh`),
+          `${buildPath}/run.sh`
+        )
+      );
+      await Promise.all(fileWritePromises);
+    } catch (err) {
+      console.error(err);
     }
     return {
-      fileId,
-      filePath,
+      compileId,
+      buildPath,
     };
   }
 
   /**
    * Creates a decorated parent callback which handles compiler related tasks on execution complete
-   * @param  {String} filePath
-   * @param  {String} language
-   * @param  {String} fileId
+   * @param  {String} buildPath
+   * @param  {String} compileId
    * @param  {Function} callback
    * @returns {Function} modified callback
    */
-  generateExecutionCallback(filePath, language, fileId, callback) {
-    const execCallback = function (output, errors) {
-      fs.unlink(filePath);
-      this.cleanPostBuild(language)(output, errors, fileId);
-      callback(output, errors);
-    }.bind(this);
+  generateExecutionCallback(buildPath, compileId, callback) {
+    const execCallback = async (stdout, stderr) => {
+      await fs.rmdir(buildPath, { recursive: true });
+      callback(stdout, stderr);
+    };
     return execCallback;
   }
 
@@ -82,42 +92,6 @@ class Compiler {
           code,
           fileId,
         };
-    }
-  }
-
-  /**
-   * Applies language specific cleanup post execution complete
-   * @param  {String} language
-   * @returns {Function} cleanup utility function
-   */
-  cleanPostBuild(language) {
-    switch (language) {
-      case "java":
-        return util.java.cleanPostBuild;
-      case "c":
-        return util.c.cleanPostBuild;
-      default:
-        return function () {
-          return;
-        };
-    }
-  }
-
-  /**
-   * Returns correct file suffix based on language
-   * @param  {String} language
-   * @returns {String} file suffix
-   */
-  fileSuffix(language) {
-    switch (language) {
-      case "python":
-        return "py";
-      case "javascript":
-        return "js";
-      case "java":
-        return "java";
-      case "c":
-        return "c";
     }
   }
 }

@@ -1,5 +1,3 @@
-prog=$1
+#!/bin/sh
 
-output="$(python3 $prog)"
-
-echo "$output"
+python tmp/main.py

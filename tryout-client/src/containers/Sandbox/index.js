@@ -21,7 +21,7 @@ const socketIoServerEndpoint = "http://127.0.0.1:5700";
 class Sandbox extends React.Component {
   constructor(props) {
     super();
-    this.initialLanguage = "java";
+    this.initialLanguage = "python";
     this.state = {
       loading: false,
       editor: {
@@ -136,7 +136,12 @@ class Sandbox extends React.Component {
     });
     try {
       this.state.socket.emit("compile_init", {
-        code: this.state.editor.rawContent,
+        files: [
+          {
+            name: "main.py",
+            content: this.state.editor.rawContent,
+          },
+        ],
         language: this.state.editor.language,
         roomId: "1234",
       });

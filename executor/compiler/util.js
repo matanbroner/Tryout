@@ -10,34 +10,5 @@ module.exports = {
       // TODO: make letter random
       return "z" + id;
     },
-  },
-  java: {
-    formatPreBuild: (code, fileId) => {
-      return {
-        code: code.replace("Solution", `Solution${fileId}`),
-        fileId: `Solution${fileId}`,
-      };
-    },
-    cleanPostBuild: (stdout, stderr, fileId) => {
-      if (stderr.length == 0) {
-        fs.unlink(
-          path.resolve(__dirname, "builds", `${fileId}.class`),
-          (err) => {
-            console.log(err);
-            return;
-          }
-        );
-      }
-    },
-  },
-  c: {
-    cleanPostBuild: (stdout, stderr, fileId) => {
-      if (stderr.length == 0) {
-        fs.unlink(path.resolve(__dirname, "builds", `${fileId}`), (err) => {
-          console.log(err);
-          return;
-        });
-      }
-    },
-  },
+  }
 };
