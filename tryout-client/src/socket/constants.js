@@ -1,6 +1,7 @@
 module.exports = {
+    OPEN: "open",
+    READY: "ready",
     CONNECTION: "connection",
-    CLOSE: "close",
     MESSAGE: "message",
     BAD_FORMAT: "bad_format",
     ESTABLISH_WS_ID: "establish_ws_id",

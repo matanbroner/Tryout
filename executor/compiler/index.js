@@ -52,6 +52,7 @@ class Compiler {
         )
       );
       await Promise.all(fileWritePromises);
+      await fs.chmod(`${buildPath}/run.sh`, 511);
     } catch (err) {
       console.error(err);
     }
@@ -69,9 +70,9 @@ class Compiler {
    * @returns {Function} modified callback
    */
   generateExecutionCallback(buildPath, compileId, callback) {
-    const execCallback = async (stdout, stderr) => {
+    const execCallback = async (stdout, stderr, sysout) => {
       await fs.rmdir(buildPath, { recursive: true });
-      callback(stdout, stderr);
+      callback(stdout, stderr, sysout);
     };
     return execCallback;
   }

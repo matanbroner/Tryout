@@ -42,3 +42,17 @@ services:
     volumes:
       - ./tryout-client:/app
       - /app/node_modules
+  mongodb:
+    container_name: "mongodb"
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: dev
+      MONGO_INITDB_ROOT_PASSWORD: dev_password
+      MONGO_INITDB_DATABASE: tryout_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo/mongo-init-dev.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+volumes:
+  mongodb_data:

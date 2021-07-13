@@ -23,3 +23,18 @@ code {
 .monaco-editor {
   padding-top: 15px;
 }
+
+/* .ant-menu > .ant-menu-item:hover,
+.ant-menu > .ant-menu-submenu:hover,
+.ant-menu > .ant-menu-item-active,
+.ant-menu> .ant-menu-submenu-active,
+.ant-menu > .ant-menu-item-open,
+.ant-menu> .ant-menu-submenu-open,
+.ant-menu > .ant-menu-item-selected,
+.ant-menu > .ant-menu-submenu-selected,
+.ant-btn:hover,
+.ant-input-affix-wrapper:hover,
+.ant-input-affix-wrapper::selection {
+  color: #8685EF;
+  border-color: #8685EF;
+} */

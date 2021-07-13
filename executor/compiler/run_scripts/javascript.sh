@@ -1,4 +1,4 @@
 #!/bin/sh
 
 cd tmp
-python main.py
+node index.js

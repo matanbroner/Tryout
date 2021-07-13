@@ -8,11 +8,11 @@ class MemoryRoomAdapter {
    * @param  {String} userId
    * @param  {String} roomId
    */
-  join(userId, roomId) {
+  join(socket, userId, roomId) {
     if (roomId in this.rooms) {
-      this.rooms[roomId].push(userId);
+      this.rooms[roomId].push({socket, userId});
     } else {
-      this.rooms[roomId] = [userId];
+      this.rooms[roomId] = [{socket, userId}];
     }
   }
 
@@ -23,11 +23,15 @@ class MemoryRoomAdapter {
    */
   exit(userId, roomId) {
     if (this.rooms[roomId]) {
-      this.rooms[roomId] = this.rooms[roomId].filter((id) => id !== userId);
+      this.rooms[roomId] = this.rooms[roomId].filter((member) => member.userId !== userId);
       if (this.rooms[roomId].length == 0) {
         delete this.rooms[roomId];
       }
     }
+  }
+
+  members(roomId){
+    return this.rooms[roomId] || []
   }
 }
 

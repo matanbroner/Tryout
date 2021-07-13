@@ -1,14 +1,18 @@
 export default {
-  java: `
+  java: {
+    file: "Tryout.java",
+    code: `
 import java.util.*;
 
-class Solution {
+class Tryout {
     public static void main(String[ ] args) {
         // insert your code here
     }
 }
     `,
-  c: `
+    c: {
+      file: "main.c",
+      code: `
 #include <stdio.h>
 int main()
 {
@@ -16,14 +20,23 @@ int main()
   return 0;
 }
   `,
-  python: `
+    },
+  },
+  python: {
+    file: "main.py",
+    code: `
 def main():
+    print("Hello World")
     # insert your code here
 
 if __name__ == "__main__":
     main()
     `,
-  javascript: `
+  },
+  javascript: {
+    file: "index.js",
+    code: `
 // insert your code here
     `,
+  },
 };

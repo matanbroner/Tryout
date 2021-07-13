@@ -22,3 +22,9 @@
   overflow-wrap: break-word;
   white-space: initial;
 }
+
+#sysout {
+  color: #9932CC;
+  overflow-wrap: break-word;
+  white-space: initial;
+}

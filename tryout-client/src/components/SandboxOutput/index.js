@@ -2,14 +2,19 @@ import React from "react";
 import styles from "./styles.module.css";
 
 const SandboxOutput = (props) => {
+  const languageUpper =
+    props.language.charAt(0).toUpperCase() + props.language.slice(1);
   return (
     <div id={styles.wrapper}>
       <div id={styles.textArea}>
-        <span>Python 3.8.4 (default, Jul 14 2020, 02:58:48)</span>
+        <span>
+          {languageUpper} environment ready! Press "Run" to test your code.
+        </span>
         <br />
         <span>{props.stdout}</span>
         <br />
         <span id={styles.stderr}>{props.stderr}</span>
+        <span id={styles.sysout}>{props.sysout}</span>
       </div>
     </div>
   );

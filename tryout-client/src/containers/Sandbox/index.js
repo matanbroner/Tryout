@@ -1,42 +1,55 @@
 import React from "react";
+import WebSocketClient from "../../socket/client";
+import ShareDBMonaco from "sharedb-monaco";
 import MonacoEditor from "react-monaco-editor";
-
-import socketIOClient from "socket.io-client";
-
 import { Row, Col, Layout, Modal, Button } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 
 import SandboxSidebar from "../../components/SandboxSidebar";
 import SandboxHeader from "../../components/SandboxHeader";
 import SandboxOutput from "../../components/SandboxOutput";
+
+import constants from "../../socket/constants";
 import starterCode from "../../assets/starterCode";
 import styles from "./styles.module.css";
 
-const superagent = require("superagent");
-
 const { Content } = Layout;
 
-const socketIoServerEndpoint = "http://127.0.0.1:5700";
+const wsServerEndpoint = "ws://127.0.0.1:5700";
 
 class Sandbox extends React.Component {
   constructor(props) {
-    super();
-    this.initialLanguage = "python";
+    super(props);
+    const initialLanguage = "javascript";
     this.state = {
       loading: false,
       editor: {
-        rawContent: starterCode[this.initialLanguage],
-        language: this.initialLanguage,
+        rawContent: "Loading...",
+        language: initialLanguage,
         theme: "vs-dark",
       },
       output: {
         stdout: "",
         stderr: "",
+        sysout: "",
       },
       modals: {
         clearEditor: false,
       },
     };
+  }
+
+  componentDidMount() {
+    this.setupBeforeUnloadListener();
+  }
+
+  componentWillUnmount() {
+    this.killConnection();
+  }
+
+  editorDidMount(editor, monaco) {
+    this.setupShareDbConnection(editor);
+    editor.focus();
   }
 
   // catch browser tab close event
@@ -50,52 +63,70 @@ class Sandbox extends React.Component {
     );
   };
 
-  setupSocketConnection() {
-    const socket = socketIOClient(socketIoServerEndpoint);
-    socket.on("connect", function () {
-      console.log("Connected to backend server");
+  async setupSocketConnection(ws) {
+    const that = this;
+    const socket = new WebSocketClient({ 
+      ws,
+      noMessageEventHandler: true
     });
-    socket.on("disconnect", function () {
-      console.log("Disconnecting from backend server");
-    });
-    socket.on(
-      "compile_complete",
-      function (data) {
-        console.log("Got compile complete");
-        console.log(data);
-        this.setState({
+    socket.setCustomEventHandlers({
+      [constants.COMPILE_COMPLETE]: (data) => {
+        that.setState({
           loading: false,
           output: {
             stdout: data.stdout,
             stderr: data.stderr,
+            sysout: data.sysout,
           },
         });
-      }.bind(this)
-    );
-    socket.emit("join_room", {
-      roomId: "1234",
-      userId: "matanbroner",
+      },
+    });
+    socket.send({
+      event: constants.JOIN_ROOM,
+      data: {
+        roomId: "1234",
+        userId: "matanbroner",
+      },
     });
     this.setState({
       socket,
     });
   }
 
-  killSocketConnection() {
-    this.state.socket.emit("exit_room", {
-      roomId: "1234",
-      userId: "matanbroner",
+  setupShareDbConnection(editor) {
+    let that = this;
+    const shareDbBinding = new ShareDBMonaco({
+      namespace: "test_ns",
+      id: "test_doc_2",
+      wsurl: wsServerEndpoint,
     });
-    this.state.socket.disconnect();
+    that.setupSocketConnection(shareDbBinding.WS)
+    shareDbBinding.connection.on('receive', function(request) {
+      const message = request.data;
+      if (message.internal) {
+        that.state.socket.handleEvent(message);
+        // prevent ShareDB connection handler from processing
+        // this message
+        request.data = null;
+      }
+    });
+    shareDbBinding.on(constants.READY, () => {
+      shareDbBinding.add(editor, "content");
+    });
+    this.setState({
+      shareDbBinding
+    })
   }
 
-  componentDidMount() {
-    this.setupBeforeUnloadListener();
-    this.setupSocketConnection();
-  }
-
-  componentWillUnmount() {
-    this.killSocketConnection();
+  killConnection() {
+    this.state.socket.send({
+      event: constants.EXIT_ROOM,
+      data: {
+        roomId: "1234",
+        userId: "matanbroner",
+      },
+    });
+    this.state.shareDbBinding.close();
   }
 
   onCodeChange(code) {
@@ -111,7 +142,7 @@ class Sandbox extends React.Component {
     this.setState({
       editor: {
         ...this.state.editor,
-        rawContent: starterCode[language] || "",
+        rawContent: starterCode[language].code.trim() || "",
         language,
       },
     });
@@ -135,15 +166,18 @@ class Sandbox extends React.Component {
       loading: true,
     });
     try {
-      this.state.socket.emit("compile_init", {
-        files: [
-          {
-            name: "main.py",
-            content: this.state.editor.rawContent,
-          },
-        ],
-        language: this.state.editor.language,
-        roomId: "1234",
+      this.state.socket.send({
+        event: constants.COMPILE_INIT,
+        data: {
+          files: [
+            {
+              name: starterCode[this.state.editor.language].file,
+              content: this.state.editor.rawContent,
+            },
+          ],
+          language: this.state.editor.language,
+          roomId: "1234",
+        },
       });
     } catch (err) {
       alert(err);
@@ -158,6 +192,7 @@ class Sandbox extends React.Component {
         theme={this.state.editor.theme}
         value={this.state.editor.rawContent}
         onChange={this.onCodeChange.bind(this)}
+        editorDidMount={this.editorDidMount.bind(this)}
         options={{
           automaticLayout: true,
           minimap: {
@@ -192,14 +227,22 @@ class Sandbox extends React.Component {
             onLanguageChange={(language) => this.onLanguageChange(language)}
           />
           <Layout style={{ height: "100%" }}>
-            {/* <SandboxSidebar /> */}
+            <SandboxSidebar
+              files={[
+                {
+                  name: starterCode[this.state.editor.language].file,
+                },
+              ]}
+            />
             <Content style={{ height: "100%" }}>
               <Row id={styles.editorWrapper}>
                 <Col span={16}>{this.renderEditor()}</Col>
                 <Col span={8}>
                   <SandboxOutput
+                    language={this.state.editor.language}
                     stdout={this.state.output.stdout}
                     stderr={this.state.output.stderr}
+                    sysout={this.state.output.sysout}
                   />
                 </Col>
               </Row>

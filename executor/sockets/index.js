@@ -1,13 +1,17 @@
-const socketio = require("socket.io");
+const WebSocket = require("ws");
+const WebSocketJSONStream = require("@teamwork/websocket-json-stream");
+const uuid = require("uuid");
 const constants = require("./constants");
 const { MemoryRoomAdapter } = require("./adapters");
 const { Compiler } = require("../compiler");
+const { TryoutFileDb } = require("../file_manager/db");
 
 class SocketHandler {
   constructor(server) {
     this.server = server;
     this.roomStorage = new MemoryRoomAdapter();
     this.compiler = new Compiler();
+    this.fileDb = new TryoutFileDb();
     this.setupTransport();
   }
 
@@ -21,87 +25,113 @@ class SocketHandler {
     });
   }
 
+  send(socket, data) {
+    data.internal = true;
+    socket.send(JSON.stringify(data));
+  }
+
+  emit(roomId, data) {
+    const members = this.roomStorage.members(roomId);
+    members.forEach(
+      function (member) {
+        this.send(member.socket, data);
+      }.bind(this)
+    );
+  }
+
   /**
    * Generates callback to be called after compiler execution
    * @param  {String} roomId
    * @returns {Function} callback accepting output and errors
    */
   generateCompileCallback(roomId) {
-    const callback = (output, errors) => {
+    const callback = (stdout, stderr, sysout) => {
       console.log(`Emitting roomId: [${roomId}] compile_complete`);
-      this.io.to(roomId).emit(constants.COMPILE_COMPLETE, {
-        stdout: output,
-        stderr: errors,
+      this.emit(roomId, {
+        event: constants.COMPILE_COMPLETE,
+        data: {
+          stdout,
+          stderr,
+          sysout,
+        },
       });
     };
     return callback;
   }
 
   /**
-   * Initiates Socket.IO server connection
+   * Initiates WebSockets server connection
    */
   setupTransport() {
-    this.io = socketio(this.server);
-    this.io.origins("*:*");
-    this.io.on(
+    const { server } = this;
+    this.wss = new WebSocket.Server({ server });
+    this.wss.on(
       constants.CONNECTION,
       function (socket) {
-        console.log(`Socket connected: ${socket.id}`);
-        this.defineRoomEvents(socket);
-        this.defineCompilerEvents(socket);
+        socket.id = uuid.v4();
+        console.log(`WebSocket connected: ${socket.id}`);
+
+        // set up ShareDB JSON stream
+        const stream = new WebSocketJSONStream(socket);
+        this.fileDb.listenJsonStream(stream);
+
+        this.send(socket, {
+          event: constants.ESTABLISH_WS_ID,
+          data: {
+            id: socket.id,
+          },
+        });
+        this.defineEventHandlers(socket);
       }.bind(this)
     );
   }
 
   /**
-   * Defines events associated with Socket.IO rooms
-   * @param  {socketio.socket} socket
+   * Defines event handlers for individual sockets
+   * @param  {WebSocket} socket
    */
-  defineRoomEvents(socket) {
+  defineEventHandlers(socket) {
     socket.on(
-      constants.JOIN_ROOM,
-      function (data) {
-        const userId = data.userId;
-        const roomId = data.roomId;
-
-        if (roomId && userId) {
-          socket.join(roomId);
-          this.roomStorage.join(userId, roomId);
-        }
-      }.bind(this)
-    );
-    socket.on(
-      constants.EXIT_ROOM,
-      function (data) {
-        const userId = data.userId;
-        const roomId = data.roomId;
-
-        if (roomId && userId) {
-          socket.leave(roomId);
-          // empty rooms are deleted automatically
-          this.roomStorage.exit(userId, roomId);
-        }
-      }.bind(this)
-    );
-  }
-
-  /**
-   * Defines events associated with compilation
-   * @param  {socketio.socket} socket
-   */
-  defineCompilerEvents(socket) {
-    socket.on(
-      constants.COMPILE_INIT,
-      function (data) {
-        const { files, language, roomId } = data;
-        const callback = this.generateCompileCallback(roomId);
+      constants.MESSAGE,
+      function (message) {
         try {
-          if (!files || !language) {
-            throw "Missing one or more of arguments [files, language]";
-          }
-          this.compiler.runCode(files, language, callback);
+          message = JSON.parse(message);
         } catch (e) {
-          callback(null, e);
+          this.send(socket, {
+            event: constants.BAD_FORMAT,
+          });
+          return;
+        }
+        switch (message.event) {
+          case constants.JOIN_ROOM: {
+            const { userId, roomId } = message.data;
+            if (roomId && userId) {
+              this.roomStorage.join(socket, userId, roomId);
+            }
+            break;
+          }
+          case constants.EXIT_ROOM: {
+            const { userId, roomId } = message.data;
+            if (roomId && userId) {
+              // empty rooms are deleted automatically
+              this.roomStorage.exit(userId, roomId);
+              console.log(`User ${userId} leaving room ${roomId}`);
+            }
+            break;
+          }
+          case constants.COMPILE_INIT: {
+            const { files, language, roomId } = message.data;
+            const callback = this.generateCompileCallback(roomId);
+            try {
+              if (!files || !language) {
+                throw "Missing one or more of arguments [files, language]";
+              }
+              this.compiler.runCode(files, language, callback);
+            } catch (e) {
+              callback(null, e);
+            }
+            break;
+          }
         }
       }.bind(this)
     );
