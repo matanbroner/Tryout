@@ -20,7 +20,7 @@ const wsServerEndpoint = "ws://127.0.0.1:5700";
 class Sandbox extends React.Component {
   constructor(props) {
     super(props);
-    const initialLanguage = "javascript";
+    const initialLanguage = "python";
     this.state = {
       loading: false,
       editor: {
@@ -65,9 +65,9 @@ class Sandbox extends React.Component {
 
   async setupSocketConnection(ws) {
     const that = this;
-    const socket = new WebSocketClient({ 
+    const socket = new WebSocketClient({
       ws,
-      noMessageEventHandler: true
+      noMessageEventHandler: true,
     });
     socket.setCustomEventHandlers({
       [constants.COMPILE_COMPLETE]: (data) => {
@@ -95,27 +95,36 @@ class Sandbox extends React.Component {
 
   setupShareDbConnection(editor) {
     let that = this;
+    // const shareDbBinding = new ShareDBMonaco({
+    //   namespace: "test_ns",
+    //   id: "test_doc_2",
+    //   wsurl: wsServerEndpoint,
+    // });
     const shareDbBinding = new ShareDBMonaco({
-      namespace: "test_ns",
-      id: "test_doc_2",
+      request: {
+        test_ns: ["test_doc_2"],
+      },
+      activeDoc: ["test_ns", "test_doc_2"],
       wsurl: wsServerEndpoint,
     });
-    that.setupSocketConnection(shareDbBinding.WS)
-    shareDbBinding.connection.on('receive', function(request) {
-      const message = request.data;
-      if (message.internal) {
-        that.state.socket.handleEvent(message);
-        // prevent ShareDB connection handler from processing
-        // this message
-        request.data = null;
-      }
-    });
+    that.setupSocketConnection(shareDbBinding.WS);
+
     shareDbBinding.on(constants.READY, () => {
+      shareDbBinding.connection.on("receive", function (request) {
+        const message = request.data;
+        if (message.internal) {
+          that.state.socket.handleEvent(message);
+          // prevent ShareDB connection handler from processing
+          // this message
+          request.data = null;
+        }
+      });
+      that.state.socket.sendRequestId();
       shareDbBinding.add(editor, "content");
     });
     this.setState({
-      shareDbBinding
-    })
+      shareDbBinding,
+    });
   }
 
   killConnection() {

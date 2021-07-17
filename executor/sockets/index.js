@@ -4,7 +4,7 @@ const uuid = require("uuid");
 const constants = require("./constants");
 const { MemoryRoomAdapter } = require("./adapters");
 const { Compiler } = require("../compiler");
-const { TryoutFileDb } = require("../file_manager/db");
+const { TryoutFileDb } = require("../db");
 
 class SocketHandler {
   constructor(server) {
@@ -12,16 +12,28 @@ class SocketHandler {
     this.roomStorage = new MemoryRoomAdapter();
     this.compiler = new Compiler();
     this.fileDb = new TryoutFileDb();
-    this.setupTransport();
   }
 
   /**
    * Starts listening on given HTTP server
    * @param  {Number} port
    */
-  listen(port) {
-    this.server.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
+  listen(port, callback) {
+    let that = this;
+    this.server.listen(port, async () => {
+      try {
+        await that.fileDb.connect();
+        if (callback) {
+          callback();
+        }
+        this.setupTransport();
+      } catch (err) {
+        if (callback) {
+          callback(err);
+        } else {
+          throw err;
+        }
+      }
     });
   }
 
@@ -74,13 +86,6 @@ class SocketHandler {
         // set up ShareDB JSON stream
         const stream = new WebSocketJSONStream(socket);
         this.fileDb.listenJsonStream(stream);
-
-        this.send(socket, {
-          event: constants.ESTABLISH_WS_ID,
-          data: {
-            id: socket.id,
-          },
-        });
         this.defineEventHandlers(socket);
       }.bind(this)
     );
@@ -103,6 +108,16 @@ class SocketHandler {
           return;
         }
         switch (message.event) {
+          case constants.REQUEST_WS_ID: {
+            console.log("got id request");
+            this.send(socket, {
+              event: constants.ESTABLISH_WS_ID,
+              data: {
+                id: socket.id,
+              },
+            });
+            break;
+          }
           case constants.JOIN_ROOM: {
             const { userId, roomId } = message.data;
             if (roomId && userId) {

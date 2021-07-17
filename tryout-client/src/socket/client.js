@@ -10,6 +10,12 @@ class WebSocketClient {
     }
   }
 
+  sendRequestId(){
+    this.send({
+      event: constants.REQUEST_WS_ID
+    })
+  }
+
   connect() {
     if (this.ws) {
       return;

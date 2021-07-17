@@ -13,7 +13,7 @@
     "react-monaco-editor": "^0.40.0",
     "react-scripts": "3.4.3",
     "sharedb": "^1.8.3",
-    "sharedb-monaco": "^1.0.10",
+    "sharedb-monaco": "git+https://github.com/matanbroner/sharedb-monaco.git",
     "socket.io-client": "^2.3.1",
     "superagent": "^6.1.0",
     "ws": "^7.5.2"
