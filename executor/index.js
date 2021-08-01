@@ -2,10 +2,12 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const bodyParser = require("body-parser");
+const router = require("./api/router");
 
 const app = express();
 
 app.use(bodyParser.json());
+app.use(router);
 
 const server = http.createServer(app);
 const { SocketHandler } = require("./sockets");

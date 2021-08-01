@@ -5,6 +5,11 @@ const { Types } = mongoose.Schema;
 
 const schema = new mongoose.Schema({
   name: Types.String,
+  tryoutId: {
+    type: Types.ObjectId,
+    index: true,
+    unique: true
+  },
   creatorId: { type: Types.ObjectId, index: true },
   sharedUsers: [
     {
@@ -15,10 +20,18 @@ const schema = new mongoose.Schema({
       },
     },
   ],
-  fileIds: [Types.String],
+  files: [Types.String],
   language: Types.String,
   statistics: {
     compileCount: Types.Number,
+  },
+  createdAt: {
+    type: Types.Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Types.Date,
+    default: Date.now,
   },
 });
 

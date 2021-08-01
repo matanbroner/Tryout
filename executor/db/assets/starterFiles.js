@@ -1,0 +1,17 @@
+module.exports = {
+    PYTHON: 'main.py',
+    JAVASCRIPT: 'main.js',
+    JAVA: 'Main.java',
+    CSHARP: 'Main.cs',
+    RUBY: 'main.rb',
+    PERL: 'main.pl',
+    PHP: 'main.php',
+    GO: 'main.go',
+    PASCAL: 'main.pas',
+    OBJECTIVEC: 'main.m',
+    HASKELL: 'Main.hs',
+    R: 'main.r',
+    LUA: 'main.lua',
+    C: 'main.c',
+    CPP: 'main.cpp',
+}

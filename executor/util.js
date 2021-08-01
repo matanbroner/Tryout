@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const uuidv4 = require("uuid").v4;
 
 const User = require("./db/models/user");
 
@@ -51,7 +52,10 @@ const generateJwt = function (user) {
       if (err) {
         return Promise.reject(err);
       } else {
-        return Promise.resolve(token);
+        return Promise.resolve({
+          token,
+          expiresIn
+        });
       }
     }
   );
@@ -61,7 +65,7 @@ const generateJwt = function (user) {
 const validateJwt = async function (token) {
   const payload = jwt.decode(token);
   const { _id } = payload;
-  const user = await User.findById(_id);
+  const user = await User.findById(_id).exec();
   if (!user) {
     return Promise.reject("User ID in signed payload is invalid");
   }
@@ -80,10 +84,19 @@ const validateEmail = function (email) {
   return /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
 };
 
+// Generate a UUID
+const generateUuid = function (length = 8) {
+  let id = uuidv4().substring(0, length);
+  // add letter to uuid to allow class names to be uuid
+  // TODO: make letter random
+  return "z" + id;
+};
+
 module.exports = {
   generateJwt,
   generateSecretKey,
   generateToken,
+  generateUuid,
   hashPassword,
   validateEmail,
   validateJwt,

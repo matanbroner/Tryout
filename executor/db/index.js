@@ -5,6 +5,11 @@ const ShareDBMongo = require("sharedb-mongo");
 const constants = require("./constants");
 
 class TryoutFileDb {
+  constructor() {
+    this.connected = false;
+    this.backend = null;
+    this.connection = null;
+  }
   async connect() {
     let that = this;
     return new Promise((resolve, reject) => {
@@ -32,6 +37,7 @@ class TryoutFileDb {
               next();
             });
             that.connection = that.backend.connect();
+            that.connected = true;
             resolve(null);
           } catch (err) {
             callback(err);
@@ -46,20 +52,19 @@ class TryoutFileDb {
     this.backend.listen(stream);
   }
 
-  createDoc(namespace, docName) {
-    while (this.connection == null) {}
-    var doc = this.connection.get(namespace, docName);
+  async createDoc(namespace, docId) {
+    var doc = this.connection.get(namespace, docId);
     doc.fetch(function (err) {
-      if (err) throw err;
+      if (err) return Promise.reject(err);
       if (doc.type === null) {
-        doc.create({ content: "HI" });
-        return;
+        doc.create({ content: "" });
+        return Promise.resolve(doc);
       }
     });
   }
 }
 
 module.exports = {
-  TryoutFileDb,
+  TryoutFileDb: new TryoutFileDb(),
   mongoose,
 };

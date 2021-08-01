@@ -1,6 +1,6 @@
 const fs = require("fs").promises;
 const path = require("path");
-const util = require("./util");
+const { generateUuid } = require("../util");
 const { ContainerManager } = require("../container_manager");
 
 class Compiler {
@@ -34,7 +34,7 @@ class Compiler {
    * @returns {Object} compilation ID and path of build
    */
   async generateBuildDir(files, language) {
-    let compileId = util.all.uuid();
+    let compileId = generateUuid();
     const buildPath = path.join(__dirname, `builds/${compileId}`);
     try {
       await fs.mkdir(buildPath);

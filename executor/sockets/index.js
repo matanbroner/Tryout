@@ -11,7 +11,7 @@ class SocketHandler {
     this.server = server;
     this.roomStorage = new MemoryRoomAdapter();
     this.compiler = new Compiler();
-    this.fileDb = new TryoutFileDb();
+    this.fileDb = TryoutFileDb;
   }
 
   /**
