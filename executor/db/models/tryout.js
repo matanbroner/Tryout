@@ -5,14 +5,16 @@ const { Types } = mongoose.Schema;
 
 const schema = new mongoose.Schema({
   name: Types.String,
-  creatorId: Types.ObjectId,
-  sharedUsers: [{
+  creatorId: { type: Types.ObjectId, index: true },
+  sharedUsers: [
+    {
       userId: Types.ObjectId,
       role: {
-          type: Types.String,
-          default: roles.WRITER
-      }
-  }],
+        type: Types.String,
+        default: roles.WRITER,
+      },
+    },
+  ],
   fileIds: [Types.String],
   language: Types.String,
   statistics: {
@@ -20,4 +22,4 @@ const schema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Tryout', schema)
+module.exports = mongoose.model("Tryout", schema);
