@@ -1,36 +1,46 @@
-const User = require('../db/models/user');
+const User = require("../db/models/user");
 const roles = require("../db/assets/roles");
+const { validateJwt } = require("../util");
 
-// write an express middleware to read a JWT token from the header and set it to the req.user
-const authMiddleware = (req, res, next) => {
+// Check for valid JWT token header and decode it
+const authMiddleware = async (req, res, next) => {
+  try {
     const token = req.headers.authorization;
     if (token) {
-        User.findOne({
-            where: {
-                token: token
-            }
-        }).then(user => {
-            if (user) {
-                req.user = user;
-            }
-            next();
-        }).catch(err => {
-            res.status(401).send(err);
+      const decoded = await validateJwt(token);
+      const user = await User.findById(decoded._id);
+      if (user) {
+        req.user = user;
+        next();
+      } else {
+        res.status(401).json({
+          message: "Unauthorized",
         });
+      }
     } else {
-        res.status(401).send('No token provided');
+      res.status(401).json({
+        message: "No JWT provided",
+      });
     }
+  } catch (err) {
+    res.status(401).json({
+      message: err.message,
+    });
+  }
 };
 
-// write an express middleware to check if the user is an admin
+// Verify user role is admin
 const adminMiddleware = (req, res, next) => {
   if (req.user.role === roles.ADMIN) {
     next();
   } else {
-    res.status(403);
+    res.status(403).json({
+      message: "Unauthorized",
+    });
   }
 };
 
 module.exports = {
-  adminMiddleware
-}
+  authMiddleware,
+  adminMiddleware,
+};

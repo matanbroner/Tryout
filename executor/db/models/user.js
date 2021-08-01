@@ -5,10 +5,23 @@ const { Types } = mongoose.Schema;
 const schema = new mongoose.Schema({
   firstName: Types.String,
   lastName: Types.String,
-  email: Types.String,
-  password: Types.String,
-  confirmed: Types.Boolean,
-  createdAt: { type: Date, default: Date.now }
+  email: {
+    type: Types.String,
+    required: true,
+  },
+  password: {
+    type: Types.String,
+    required: true,
+  },
+  jwtKey: {
+    type: Types.String,
+    required: true,
+  },
+  confirmed: {
+    type: Boolean,
+    default: false,
+  },
+  createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('User', schema)
+module.exports = mongoose.model("User", schema);
