@@ -1,6 +1,7 @@
 const User = require("../db/models/user");
 const roles = require("../db/assets/roles");
 const { validateJwt } = require("../util");
+const { ApiError } = require("./errors");
 
 // Check for valid JWT token header and decode it
 const authMiddleware = async (req, res, next) => {
@@ -13,19 +14,21 @@ const authMiddleware = async (req, res, next) => {
         req.user = user;
         next();
       } else {
-        res.status(401).json({
-          message: "Unauthorized",
-        });
+        throw new ApiError("Unauthorized", 403);
       }
     } else {
-      res.status(401).json({
-        message: "No JWT provided",
-      });
+      throw new ApiError("No access key provided", 401);
     }
   } catch (err) {
-    res.status(401).json({
-      message: err.message,
-    });
+    if (err instanceof ApiError) {
+      return res.status(err.status).json({
+        error: err.message,
+      });
+    } else {
+      return res.status(500).json({
+        error: err.message,
+      });
+    }
   }
 };
 
@@ -34,8 +37,8 @@ const adminMiddleware = (req, res, next) => {
   if (req.user.role === roles.ADMIN) {
     next();
   } else {
-    res.status(403).json({
-      message: "Unauthorized",
+    return res.status(403).json({
+      error: "Unauthorized",
     });
   }
 };

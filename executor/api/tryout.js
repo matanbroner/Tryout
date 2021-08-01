@@ -10,10 +10,14 @@ const { TryoutFileDb } = require("../db");
 
 // fetch all tryouts
 router.get("/", authMiddleware, async (req, res) => {
-  const tryouts = await Tryout.find({
-    creatorId: req.user._id,
-  }).exec();
-  res.json(tryouts);
+  try {
+    const tryouts = await Tryout.find({
+      creatorId: req.user._id,
+    }).exec();
+    res.status(200).json({ data: tryouts });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // create a new tryout
@@ -28,7 +32,7 @@ router.post("/", authMiddleware, async (req, res) => {
       throw new ApiError("Invalid language");
     }
     if (!TryoutFileDb.connected) {
-      throw new ApiError("Tryout File DB is not connected");
+      throw new ApiError("Tryout File DB is not connected", 500);
     }
     await TryoutFileDb.createDoc(tryoutId, baseFile);
 
