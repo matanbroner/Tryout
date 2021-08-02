@@ -1,5 +1,5 @@
 #!/bin/sh
 
 cd tmp
-javac Tryout.java
-java Tryout
+javac Main.java
+java Main
