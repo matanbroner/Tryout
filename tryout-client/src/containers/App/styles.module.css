@@ -1,0 +1,9 @@
+#layout{
+    height: 100vh;
+}
+
+#content {
+  min-height: 280px;
+  padding: 24px;
+  margin: 25px;
+}

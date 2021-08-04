@@ -58,7 +58,7 @@ class Sandbox extends React.Component {
       "beforeunload",
       function (ev) {
         ev.preventDefault();
-        return this.killSocketConnection();
+        return this.killConnection();
       }.bind(this)
     );
   };
@@ -95,11 +95,6 @@ class Sandbox extends React.Component {
 
   setupShareDbConnection(editor) {
     let that = this;
-    // const shareDbBinding = new ShareDBMonaco({
-    //   namespace: "test_ns",
-    //   id: "test_doc_2",
-    //   wsurl: wsServerEndpoint,
-    // });
     const shareDbBinding = new ShareDBMonaco({
       request: {
         test_ns: ["test_doc_2"],
