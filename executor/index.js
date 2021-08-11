@@ -6,6 +6,9 @@ const router = require("./api/router");
 
 const app = express();
 
+// TODO: remove
+app.use(cors());
+
 app.use(bodyParser.json());
 app.use(router);
 

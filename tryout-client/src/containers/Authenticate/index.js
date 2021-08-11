@@ -5,6 +5,9 @@ import qs from "query-string";
 
 import { Form, Input, Button, Checkbox, Card, Row, Col } from "antd";
 
+import { register } from "../../actions/user";
+import { emailIsValid } from "../../util";
+
 const layout = {
   labelCol: { span: 8 },
   wrapperCol: { span: 16 },
@@ -15,14 +18,9 @@ class Authenticate extends React.Component {
     super(props);
     this.state = {
       login: {
-        username: "",
+        email: "",
         password: "",
         remember: false,
-      },
-      register: {
-        username: "",
-        password: "",
-        confirmPassword: "",
       },
       isRegisterForm: false,
     };
@@ -32,7 +30,7 @@ class Authenticate extends React.Component {
   }
 
   queryRedirect(newQuery = null) {
-    if(newQuery) {
+    if (newQuery) {
       this.props.history.push(`/auth${newQuery}`);
     }
     const { search } = this.props.location;
@@ -50,6 +48,11 @@ class Authenticate extends React.Component {
       this.props.history.push(`/auth?type=login`);
     }
   }
+
+  submitRegister = (formValues) => {
+    this.props.register(formValues);
+  };
+
   renderLoginForm() {
     return (
       <Form
@@ -108,10 +111,12 @@ class Authenticate extends React.Component {
         }}
         wrapperCol={{ span: 16 }}
         size="large"
+        onFinish={this.submitRegister}
       >
         <Form.Item
           name="firstName"
           label="First Name"
+          hasFeedback
           rules={[{ required: true, message: "First Name is required" }]}
         >
           <Input />
@@ -119,6 +124,7 @@ class Authenticate extends React.Component {
         <Form.Item
           name="lastName"
           label="Last Name"
+          hasFeedback
           rules={[{ required: true, message: "Last Name is required" }]}
         >
           <Input />
@@ -126,21 +132,64 @@ class Authenticate extends React.Component {
         <Form.Item
           name="email"
           label="Email"
-          rules={[{ required: true, message: "Email is required" }]}
+          hasFeedback
+          rules={[
+            { required: true, message: "Email is required" },
+            () => ({
+              validator(_, value) {
+                if (emailIsValid(value)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(
+                  new Error("Email format is invalid")
+                );
+              },
+            }),
+          ]}
         >
           <Input />
         </Form.Item>
         <Form.Item
           name="password"
           label="Password"
-          rules={[{ required: true, message: "Password is required" }]}
+          hasFeedback
+          rules={[
+            { required: true, message: "Password is required" },
+            () => ({
+              validator(_, value) {
+                if (value.length >= 8) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(
+                  new Error("Password must be 8 characters or longer")
+                );
+              },
+            }),
+          ]}
         >
           <Input.Password />
         </Form.Item>
         <Form.Item
           name="confirmPassword"
           label="Confirm Password"
-          rules={[{ required: true, message: "Confirm your password" }]}
+          dependencies={["password"]}
+          hasFeedback
+          rules={[
+            {
+              required: true,
+              message: "Please confirm your password",
+            },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue("password") === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(
+                  new Error("The two passwords that you entered do not match!")
+                );
+              },
+            }),
+          ]}
         >
           <Input.Password />
         </Form.Item>
@@ -188,7 +237,9 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => {
-  return {};
+  return {
+    register: (payload) => dispatch(register(payload)),
+  };
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Authenticate);

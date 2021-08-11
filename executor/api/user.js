@@ -45,17 +45,18 @@ router.post("/register", async (req, res) => {
     }
     // Create a password hash
     const passwordHash = await hashPassword(password);
+    console.log(passwordHash);
     // Create new user's secret key
     const jwtKey = await generateSecretKey();
     // create a new user
-    const newUser = {
+    const newUser = new User({
       email,
       jwtKey,
       password: passwordHash,
-    };
+    });
 
     // save the new user
-    const savedUser = await users.save(newUser);
+    const savedUser = await newUser.save();
 
     // return the saved user
     return res.json(savedUser);

@@ -13,23 +13,27 @@ const generateSecretKey = function () {
 // Hash a password
 const hashPassword = async function (password) {
   const saltRounds = 10;
-  bcrypt.hash(password, saltRounds, function (err, hash) {
-    if (err) {
-      return Promise.reject(err);
-    } else {
-      return Promise.resolve(hash);
-    }
+  return new Promise((resolve, reject) => {
+    bcrypt.hash(password, saltRounds, function (err, hash) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(hash);
+      }
+    });
   });
 };
 
 // Check if a password is valid
 const validatePassword = async function (password, hash) {
-  bcrypt.compare(password, hash, function (err, result) {
-    if (err || !result) {
-      return Promise.reject(err);
-    } else {
-      return Promise.resolve(result);
-    }
+  return new Promise((resolve, reject) => {
+    bcrypt.compare(password, hash, function (err, result) {
+      if (err || !result) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
   });
 };
 
@@ -43,22 +47,24 @@ const generateJwt = function (user) {
     name,
     role,
   };
-  return jwt.sign(
-    payload,
-    jwtKey,
-    { expiresIn },
-    { algorithm: "HS256" },
-    (err, token) => {
-      if (err) {
-        return Promise.reject(err);
-      } else {
-        return Promise.resolve({
-          token,
-          expiresIn
-        });
+  return new Promise((resolve, reject) => {
+    jwt.sign(
+      payload,
+      jwtKey,
+      { expiresIn },
+      { algorithm: "HS256" },
+      (err, token) => {
+        if (err) {
+          return reject(err);
+        } else {
+          resolve({
+            token,
+            expiresIn,
+          });
+        }
       }
-    }
-  );
+    );
+  });
 };
 
 // Validate a JWT token
@@ -70,12 +76,14 @@ const validateJwt = async function (token) {
     return Promise.reject("User ID in signed payload is invalid");
   }
   const { jwtKey } = user;
-  return jwt.verify(token, jwtKey, (err, decoded) => {
-    if (err) {
-      return Promise.reject(err);
-    } else {
-      return Promise.resolve(decoded);
-    }
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, jwtKey, (err, decoded) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(decoded);
+      }
+    });
   });
 };
 
@@ -95,7 +103,7 @@ const generateUuid = function (length = 8) {
 module.exports = {
   generateJwt,
   generateSecretKey,
-  generateToken,
+  generateJwt,
   generateUuid,
   hashPassword,
   validateEmail,
